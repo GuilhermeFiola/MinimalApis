@@ -17,8 +17,9 @@ var webHost = new WebHostBuilder()
         services.AddSingleton<ClienteRepository>();
     })
     .Configure(app => {
+
         app.UseRouting();
-        
+
         // .NET Core 3
         var repo = app.ApplicationServices.GetService<ClienteRepository>();
         
@@ -58,7 +59,17 @@ var webHost = new WebHostBuilder()
                 return context.Response.WriteAsJsonAsync(cliente);
             });
 
-            endpoints.MapPut("/clientes", context => {
+            endpoints.MapPut("/clientes/{id}", context => {
+                context.Request.RouteValues.TryGetValue("id", out var id);
+                var idGuid = Guid.Parse(id.ToString());
+                
+                var cliente = repo.GetById(idGuid);
+                
+                if (cliente is null) {
+                    context.Response.StatusCode = 404;
+                    return context.Response.CompleteAsync();
+                }
+
                 var bodyStr = "";
                 var req = context.Request;
 
@@ -68,14 +79,7 @@ var webHost = new WebHostBuilder()
                 }
                 
                 var clienteUpdate = JsonSerializer.Deserialize<Cliente>(bodyStr);
-                
-                var cliente = repo.GetById(clienteUpdate.Id);
-                
-                if (cliente is null) {
-                    context.Response.StatusCode = 404;
-                    return context.Response.CompleteAsync();
-                }
-                
+
                 repo.Update(clienteUpdate);
 
                 return context.Response.WriteAsJsonAsync(clienteUpdate);

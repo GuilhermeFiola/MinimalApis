@@ -28,7 +28,7 @@ app.MapPost("/clientes", ([FromServices] ClienteRepository repo, Cliente cliente
     return Results.Created($"/clientes/{cliente.Id}", cliente);
 });
 
-app.MapPut("/clientes", ([FromServices] ClienteRepository repo, Guid id, Cliente clienteUpdate) => 
+app.MapPut("/clientes/{id}", ([FromServices] ClienteRepository repo, Guid id, Cliente clienteUpdate) => 
 {
     var cliente = repo.GetById(id);
     if (cliente is null) return Results.NotFound();
@@ -58,7 +58,8 @@ class ClienteRepository
     }
 
     public Cliente GetById(Guid id) {
-        return _clientes[id];
+        var retorno = _clientes.TryGetValue(id, out Cliente cliente);
+        return cliente;
     }
 
     public List<Cliente> GetAll() {
